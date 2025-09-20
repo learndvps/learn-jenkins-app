@@ -2,28 +2,6 @@ pipeline {
     agent any
 
     stages {
-        /*
-
-        stage('Build') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    reuseNode true
-                }
-            }
-            steps {
-                sh '''
-                    ls -la
-                    node --version
-                    npm --version
-                    npm ci
-                    npm run build
-                    ls -la
-                '''
-            }
-        }
-        */
-
         stage('Test') {
             agent {
                 docker {
@@ -31,11 +9,10 @@ pipeline {
                     reuseNode true
                 }
             }
-
             steps {
                 sh '''
-                    #test -f build/index.html
-                    npm test
+                    # Run tests with Jest and output to a JUnit XML file
+                    npm test -- --testResultsProcessor="jest-junit" --outputFile=jest-results/junit.xml
                 '''
             }
         }
@@ -47,11 +24,10 @@ pipeline {
                     reuseNode true
                 }
             }
-
             steps {
                 sh '''
                     npm install serve
-                    node_modules/.bin/serve -s build &
+                    node_modules/.bin/serve -s build & 
                     sleep 10
                     npx playwright test
                 '''
@@ -61,7 +37,7 @@ pipeline {
 
     post {
         always {
-            junit 'jest-results/junit.xml'
+            junit '**/jest-results/junit.xml'  // Path to the Jest test results XML
         }
     }
 }
