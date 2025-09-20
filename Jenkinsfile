@@ -34,8 +34,9 @@ pipeline {
 
             steps {
                 sh '''
-                    #test -f build/index.html
-                    npm test
+                    # Uncomment the line below if you want to test for a specific file
+                    # test -f build/index.html
+                    npm test -- --testResultsProcessor="jest-junit" --outputFile=jest-results/junit.xml
                 '''
             }
         }
@@ -61,8 +62,19 @@ pipeline {
 
     post {
         always {
-            junit 'jest-results/junit.xml'
-            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+            // JUnit Report
+            junit '**/jest-results/junit.xml'
+
+            // Publish Playwright HTML report
+            publishHTML(
+                target: [
+                    reportName: 'Playwright HTML Report',
+                    reportDir: 'playwright-report',   // Ensure this is the directory with the HTML report
+                    reportFiles: 'index.html',        // Ensure this file exists in the directory
+                    alwaysLinkToLastBuild: false,
+                    keepAll: false
+                ]
+            )
         }
     }
 }
